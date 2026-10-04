@@ -111,6 +111,39 @@ button{font:inherit;border:0;background:none;cursor:pointer}
   .qtext{font-size:15.5px}
   .verse{font-size:16.5px}
 }
+
+/* Bloqueio de lições */
+.lesson-card.locked{cursor:not-allowed;filter:grayscale(.9);opacity:.6}
+.lesson-card.locked:hover{transform:none;box-shadow:0 4px 14px rgba(30,20,10,.07)}
+.lesson-card .lock{position:absolute;top:10px;right:10px;font-size:15px;background:rgba(255,255,255,.9);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2}
+.lesson-card.current{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,152,47,.35)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#20222a;color:#fff;padding:12px 18px;border-radius:12px;font-family:Arial;font-size:14px;z-index:400;max-width:90vw;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.show{opacity:1}
+/* Respostas */
+.answer-area{margin-top:12px}
+.answer-area label{display:block;font-family:Arial;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--wine-dark);margin-bottom:5px}
+.answer-area textarea{width:100%;min-height:84px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-family:Georgia,serif;font-size:15.5px;line-height:1.55;color:var(--ink);background:#fffdf8}
+.answer-area textarea:focus{outline:2px solid var(--gold);border-color:var(--gold)}
+.answer-status{font-family:Arial;font-size:11.5px;color:var(--muted);margin-top:4px;min-height:14px}
+.card.answered{border-left:4px solid #3f8f52}
+.req-note{font-family:Arial;font-size:13px;color:var(--muted);margin-top:10px;text-align:center}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.success{background:#3f8f52;color:#fff}
+/* Aula ao vivo */
+.live-btn{height:42px;padding:0 14px;border-radius:10px;background:#d93a3a;color:#fff;font-family:Arial;font-weight:800;font-size:13px;display:flex;align-items:center;gap:7px;cursor:pointer}
+.live-btn:hover{background:#b82c2c}
+.live-btn .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.live-panel{margin:14px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 3px 12px rgba(30,20,10,.05);font-family:Arial}
+.live-panel h2{margin:0 0 6px;color:var(--wine-dark);font-size:20px}
+.live-panel p{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.55}
+.link-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.link-row input{flex:1;min-width:200px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:13.5px;background:#faf6ee;color:var(--ink)}
+.name-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.name-row input{flex:1;min-width:200px;border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:14px}
+.jitsi-frame{width:100%;height:68vh;min-height:420px;border:0;border-radius:14px;background:#111;margin-top:6px}
+.tools-row{display:flex;gap:8px;flex-wrap:wrap;margin:18px 14px 0}
+.who{font-family:Arial;font-size:12.5px;color:var(--muted);padding:0 14px 8px}
 </style>
 </head>
 <body>
@@ -122,6 +155,7 @@ button{font:inherit;border:0;background:none;cursor:pointer}
       <div class="k1">Guia de Estudo · Bíblia Fácil</div>
       <div class="k2">Profecias de Daniel</div>
     </div>
+    <button class="live-btn" id="liveBtn" title="Aula ao vivo / conversa"><span class="dot"></span>Aula ao vivo</button>
   </div>
 </header>
 
@@ -139,7 +173,34 @@ button{font:inherit;border:0;background:none;cursor:pointer}
         <div class="progress-label" id="progressLabel">0 de 16 lições concluídas</div>
       </div>
     </div>
+    <div class="who" id="whoLine"></div>
     <div class="lesson-grid" id="lessonGrid"></div>
+    <div class="tools-row">
+      <button class="btn ghost" id="exportBtn">⬇ Baixar minhas respostas</button>
+      <button class="btn ghost" id="printBtn">🖨 Imprimir respostas</button>
+    </div>
+  </section>
+
+  <!-- AULA AO VIVO -->
+  <section id="liveView" class="view">
+    <div class="topbar">
+      <button class="back" id="backHome2">‹</button>
+      <div class="ui" style="font-size:13px;color:var(--muted)">Voltar às lições</div>
+    </div>
+    <div class="live-panel">
+      <h2>🎥 Sala permanente de aula e conversa</h2>
+      <p>Esta sala está sempre disponível. Use o mesmo link em todas as aulas ao vivo e para conversar com o professor e os colegas.</p>
+      <div class="link-row">
+        <input id="liveLink" readonly>
+        <button class="btn ghost" id="copyLive">Copiar link</button>
+        <button class="btn ghost" id="openLive">Abrir em nova aba</button>
+      </div>
+      <div class="name-row">
+        <input id="studentName" placeholder="Seu nome (aparece na sala e nas respostas)">
+        <button class="btn primary" id="joinLive">Entrar na sala aqui</button>
+      </div>
+      <div id="liveFrameWrap"></div>
+    </div>
   </section>
 
   <!-- LESSON -->
@@ -165,6 +226,7 @@ button{font:inherit;border:0;background:none;cursor:pointer}
       <div class="complete-bar">
         <button class="btn ghost" id="markDone">✓ Marcar lição como concluída</button>
       </div>
+      <div class="req-note" id="reqNote"></div>
       <div class="nav-pair">
         <button class="btn ghost" id="prevLesson">← Lição anterior</button>
         <button class="btn primary" id="nextLesson">Próxima lição →</button>
@@ -185,6 +247,8 @@ button{font:inherit;border:0;background:none;cursor:pointer}
     <div class="sheet-note">Texto consultado pela Bible-API • tradução Almeida</div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const LESSON_IMAGES = {
@@ -449,6 +513,31 @@ try{
   saved.forEach(i=>done.add(i));
 }catch(e){}
 
+/* ===== CONFIGURAÇÃO DA SALA AO VIVO (Jitsi Meet) =====
+   Troque JITSI_ROOM por um nome só seu e difícil de adivinhar.
+   O link permanente será: https://JITSI_DOMAIN/JITSI_ROOM */
+const JITSI_DOMAIN = "meet.jit.si";
+const JITSI_ROOM   = "BibliaFacil-Daniel-Estudo-Ao-Vivo-7QK2";
+const JITSI_URL    = "https://" + JITSI_DOMAIN + "/" + JITSI_ROOM;
+
+/* ===== RESPOSTAS DOS ESTUDANTES (salvas no navegador) ===== */
+let answers = {};
+try{ answers = JSON.parse(localStorage.getItem("daniel_answers")||"{}"); }catch(e){}
+function saveAnswers(){ try{ localStorage.setItem("daniel_answers", JSON.stringify(answers)); }catch(e){} }
+function getName(){ try{ return localStorage.getItem("daniel_name")||""; }catch(e){ return ""; } }
+function setName(v){ try{ localStorage.setItem("daniel_name", v); }catch(e){} }
+const akey = (l,q)=> l+"-"+q;
+function lessonAnswered(l){ return LESSONS[l].questions.every((_,qi)=>(answers[akey(l,qi)]||"").trim().length>0); }
+function answeredCount(l){ return LESSONS[l].questions.filter((_,qi)=>(answers[akey(l,qi)]||"").trim().length>0).length; }
+
+/* ===== BLOQUEIO SEQUENCIAL: só abre a lição N se 1..N-1 estiverem concluídas ===== */
+function isUnlocked(i){ for(let j=0;j<i;j++){ if(!done.has(j)) return false; } return true; }
+function firstPending(){ for(let j=0;j<LESSONS.length;j++){ if(!done.has(j)) return j; } return -1; }
+function toast(msg){
+  const t=$("toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove("show"),3200);
+}
+
 function saveDone(){
   try{ localStorage.setItem("daniel_done", JSON.stringify([...done])); }catch(e){}
 }
@@ -463,9 +552,11 @@ function showView(id){
 
 function renderHome(){
   $("heroMedia").src = LESSON_IMAGES[1].header;
+  const cur = firstPending();
+  $("whoLine").textContent = getName() ? "Estudante: "+getName() : "";
   $("lessonGrid").innerHTML = LESSONS.map((l,i)=>`
-    <button class="lesson-card ${done.has(i)?'done':''}" data-i="${i}">
-      <div class="check">✓</div>
+    <button class="lesson-card ${done.has(i)?'done':''} ${!isUnlocked(i)?'locked':''} ${i===cur?'current':''}" data-i="${i}">
+      ${isUnlocked(i)?'<div class="check">✓</div>':'<div class="lock">🔒</div>'}
       <div class="lc-media-wrap">
         <img src="${LESSON_IMAGES[i+1].thumb}" alt="">
         <div class="lc-scrim"></div>
@@ -473,11 +564,15 @@ function renderHome(){
       </div>
       <div class="lc-body">
         <div class="lname">${escapeHtml(l.title)}</div>
-        <div class="meta">${l.questions.length} perguntas</div>
+        <div class="meta">${isUnlocked(i)?(done.has(i)?'Concluída':(i===cur?'Em andamento · ':'')+answeredCount(i)+'/'+l.questions.length+' respondidas'):'Conclua a lição '+i+' para liberar'}</div>
       </div>
     </button>`).join("");
   $("lessonGrid").querySelectorAll(".lesson-card").forEach(btn=>{
-    btn.addEventListener("click",()=>openLesson(Number(btn.dataset.i)));
+    btn.addEventListener("click",()=>{
+      const i=Number(btn.dataset.i);
+      if(!isUnlocked(i)){ toast("🔒 Conclua a lição "+i+" para liberar esta lição."); return; }
+      openLesson(i);
+    });
   });
   const pct = Math.round(done.size/LESSONS.length*100);
   $("progressBar").style.width = pct+"%";
@@ -500,35 +595,72 @@ function renderLesson(i){
     <div class="card">
       <div><span class="qnum">${qi+1}</span><span class="qtext">${escapeHtml(item.q)}</span></div>
       <div class="refs">${item.refs.map(refBtnHtml).join("")}</div>
+      <div class="answer-area">
+        <label for="ans-${i}-${qi}">Minha resposta</label>
+        <textarea id="ans-${i}-${qi}" data-q="${qi}" placeholder="Escreva aqui com suas palavras, depois de ler os textos bíblicos…">${escapeHtml(answers[akey(i,qi)]||"")}</textarea>
+        <div class="answer-status" id="st-${i}-${qi}"></div>
+      </div>
     </div>`).join("");
+
+  $("questionList").querySelectorAll("textarea").forEach(ta=>{
+    const qi=Number(ta.dataset.q);
+    const card=ta.closest(".card");
+    card.classList.toggle("answered", ta.value.trim().length>0);
+    ta.addEventListener("input",()=>{
+      answers[akey(i,qi)]=ta.value; saveAnswers();
+      card.classList.toggle("answered", ta.value.trim().length>0);
+      $("st-"+i+"-"+qi).textContent="✓ Salvo automaticamente";
+      updateCompleteState();
+    });
+  });
 
   $("questionList").querySelectorAll(".ref-btn").forEach(btn=>{
     btn.addEventListener("click",()=>openBible(btn.dataset.ref));
   });
 
-  $("markDone").textContent = done.has(i) ? "✓ Lição concluída — desmarcar" : "✓ Marcar lição como concluída";
   $("prevLesson").disabled = i===0;
-  $("nextLesson").textContent = i===LESSONS.length-1 ? "Voltar ao início →" : "Próxima lição →";
+  updateCompleteState();
 
   showView("lessonView");
 }
 
-function openLesson(i){ renderLesson(i); }
+function updateCompleteState(){
+  const i=currentLesson, isDone=done.has(i), all=lessonAnswered(i);
+  const mb=$("markDone");
+  mb.textContent = isDone ? "✓ Lição concluída — desmarcar" : "✓ Concluir lição";
+  mb.className = "btn " + (isDone ? "success" : "ghost");
+  mb.disabled = !isDone && !all;
+  $("reqNote").textContent = isDone ? "" : (all ? "Tudo respondido! Toque em “Concluir lição” para liberar a próxima."
+    : "Responda todas as perguntas ("+answeredCount(i)+"/"+LESSONS[i].questions.length+") para concluir e liberar a próxima lição.");
+  const last = i===LESSONS.length-1;
+  const nb=$("nextLesson");
+  nb.textContent = last ? "Voltar ao início →" : "Próxima lição →";
+  nb.disabled = !last && !isDone;
+}
+
+function openLesson(i){ if(!isUnlocked(i)){ toast("🔒 Conclua a lição anterior primeiro."); return; } renderLesson(i); }
 
 $("homeBtn").addEventListener("click",()=>{renderHome();showView("homeView");});
 $("backHome").addEventListener("click",()=>{renderHome();showView("homeView");});
 
 $("markDone").addEventListener("click",()=>{
-  if(done.has(currentLesson)) done.delete(currentLesson); else done.add(currentLesson);
+  if(done.has(currentLesson)){
+    // desmarcar também bloqueia as lições seguintes (sequência é recalculada)
+    done.delete(currentLesson);
+  } else {
+    if(!lessonAnswered(currentLesson)){ toast("Responda todas as perguntas antes de concluir."); return; }
+    done.add(currentLesson);
+    toast(currentLesson<LESSONS.length-1 ? "🎉 Lição concluída! A próxima lição foi liberada." : "🎉 Parabéns! Você concluiu todas as lições!");
+  }
   saveDone();
-  renderLesson(currentLesson);
+  updateCompleteState();
 });
 
 $("prevLesson").addEventListener("click",()=>{
   if(currentLesson>0) renderLesson(currentLesson-1);
 });
 $("nextLesson").addEventListener("click",()=>{
-  if(currentLesson<LESSONS.length-1) renderLesson(currentLesson+1);
+  if(currentLesson<LESSONS.length-1){ if(done.has(currentLesson)) renderLesson(currentLesson+1); else toast("Conclua esta lição para avançar."); }
   else { renderHome(); showView("homeView"); }
 });
 
@@ -572,6 +704,55 @@ function closeSheet(){ $("overlay").classList.remove("show"); }
 $("closeSheet").addEventListener("click",closeSheet);
 $("overlay").addEventListener("click",e=>{ if(e.target===$("overlay")) closeSheet(); });
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeSheet(); });
+
+/* =========================================================
+   AULA AO VIVO — Jitsi Meet (link permanente)
+   ========================================================= */
+$("liveBtn").addEventListener("click",()=>{
+  $("liveLink").value = JITSI_URL;
+  $("studentName").value = getName();
+  showView("liveView");
+});
+$("backHome2").addEventListener("click",()=>{ $("liveFrameWrap").innerHTML=""; renderHome(); showView("homeView"); });
+$("copyLive").addEventListener("click",()=>{
+  const done_=()=>toast("Link copiado!");
+  if(navigator.clipboard) navigator.clipboard.writeText(JITSI_URL).then(done_,()=>{$("liveLink").select();document.execCommand("copy");done_();});
+  else { $("liveLink").select(); document.execCommand("copy"); done_(); }
+});
+function liveUrl(){
+  const n=$("studentName").value.trim(); if(n) setName(n);
+  return JITSI_URL + (n ? '#userInfo.displayName="'+encodeURIComponent(n)+'"' : "");
+}
+$("openLive").addEventListener("click",()=>window.open(liveUrl(),"_blank","noopener"));
+$("joinLive").addEventListener("click",()=>{
+  $("liveFrameWrap").innerHTML = '<iframe class="jitsi-frame" allow="camera; microphone; fullscreen; display-capture; autoplay" src="'+liveUrl().replace(/"/g,"&quot;")+'"></iframe>'
+    + '<p style="margin-top:10px">Se a sala não carregar aqui dentro, use “Abrir em nova aba”.</p>';
+});
+
+/* =========================================================
+   EXPORTAR / IMPRIMIR RESPOSTAS
+   ========================================================= */
+function buildReport(){
+  const name=getName()||"(sem nome)";
+  let out="GUIA DE ESTUDO BÍBLIA FÁCIL — PROFECIAS DE DANIEL\nEstudante: "+name+"\nData: "+new Date().toLocaleDateString("pt-BR")+"\n";
+  LESSONS.forEach((l,i)=>{
+    out+="\n=== LIÇÃO "+(i+1)+" — "+l.title+(done.has(i)?" [concluída]":"")+" ===\n";
+    l.questions.forEach((q,qi)=>{
+      out+="\n"+(qi+1)+". "+q.q+"\n   Resposta: "+((answers[akey(i,qi)]||"").trim()||"—")+"\n";
+    });
+  });
+  return out;
+}
+$("exportBtn").addEventListener("click",()=>{
+  const blob=new Blob([buildReport()],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="respostas-daniel.txt"; document.body.appendChild(a); a.click(); a.remove();
+});
+$("printBtn").addEventListener("click",()=>{
+  const w=window.open("","_blank"); if(!w){ toast("Permita pop-ups para imprimir."); return; }
+  w.document.write('<pre style="font:14px/1.5 Georgia,serif;white-space:pre-wrap;max-width:800px;margin:20px auto">'+escapeHtml(buildReport())+'</pre>');
+  w.document.close(); w.print();
+});
 
 /* Init */
 renderHome();
